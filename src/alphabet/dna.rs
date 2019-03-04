@@ -44,11 +44,6 @@ impl Alphabet for UnambiguousDnaAlphabet {
     fn symbols(&self) -> &[&str] {
         &UnambiguousDnaAlphabet::SYMBOLS
     }
-
-    #[inline]
-    fn size(&self) -> Option<usize> {
-        Some(1)
-    }
 }
 
 impl Complement for UnambiguousDnaAlphabet {
@@ -162,11 +157,6 @@ impl Alphabet for AmbiguousDnaAlphabet {
     #[inline]
     fn symbols(&self) -> &[&str] {
         &AmbiguousDnaAlphabet::SYMBOLS
-    }
-
-    #[inline]
-    fn size(&self) -> Option<usize> {
-        Some(1)
     }
 }
 

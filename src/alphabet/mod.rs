@@ -21,34 +21,16 @@ pub trait Alphabet {
     /// Symbols are considered to be case sensitive
     fn symbols(&self) -> &[&str];
 
-    /// If each symbol in symbols has the same size then this returns that size otherwise None.
+    /// The size of each symbol in [Alphabet::symbols()].
     ///
-    /// # Notes
-    /// <ls>
-    /// <li>It cannot be assumed the size will be constant and thus the default implementation
-    /// recalculates it each call.</li>
-    /// <li>If the symbol size is constant then consider explicitly defining size.</li>
-    /// <li>If [`Alphabet::symbols()`] is empty then the size will be 0</li>
-    /// </ls>
-    fn size(&self) -> Option<usize> {
-        // Get the minimum symbol length
-        let symbols = self.symbols();
-        let min = symbols.iter().min_by_key(|s| s.len());
-
-        // If min is None then the vector is empty
-        if min.is_none() {
-            return Some(0);
-        }
-
-        // Get the maximum symbol length
-        let max = symbols.iter().max_by_key(|s| s.len()).unwrap().len();
-        let min = min.unwrap().len();
-
-        if min == max {
-            return Some(min);
-        }
-
-        None
+    /// # Requires
+    /// The size must be greater than 0
+    ///
+    /// # Default
+    /// The default size of an alphabet is 1
+    #[inline]
+    fn size(&self) -> usize {
+        1
     }
 
     /// Returns true if the alphabet contains the symbol "s" else false
@@ -98,122 +80,60 @@ pub trait Complement: Alphabet {
 mod tests {
     use super::*;
 
-    /// What the size of the constructed alphabet should be
-    enum TestSize {
-        Zero,
-        One,
-        Two,
-        None
-    }
-
-    impl TestSize {
-        fn value(&self) -> Option<usize> {
-            match *self {
-                TestSize::Zero => Some(0),
-                TestSize::One  => Some(1),
-                TestSize::Two  => Some(2),
-                TestSize::None => None,
-            }
-        }
-    }
-
     /// Alphabet that can be used to test the default implementations
-    struct TestAlphabet {
-        size: TestSize,
-        symbols: Vec<&'static str>,
-        complement: Vec<&'static str>,
-    }
+    struct TestAlphabet;
 
     impl TestAlphabet {
-        // Short and simple function to change the properties of the alphabet for testing
-        fn new(size: TestSize) -> TestAlphabet {
-            let (symbols, complement) = match size {
-                TestSize::Zero    => (vec![], vec![]),
-                TestSize::One     => (vec!["A", "B", "C"], vec!["C", "A", "B"]),
-                TestSize::Two     => (vec!["AA", "BB", "CC"], vec!["CC", "AA", "BB"]),
-                TestSize::None    => (vec!["A", "BB", "CC"], vec!["CC", "A", "BB"]),
-            };
-
-            TestAlphabet { size, symbols, complement }
-        }
-
+        const SYMBOLS:    [&'static str; 3] = ["AA", "BB", "CC"];
+        const COMPLEMENT: [&'static str; 3] = ["CC", "AA", "BB"];
     }
 
     impl Alphabet for TestAlphabet {
+        #[inline]
         fn symbols(&self) -> &[&str] {
-            &self.symbols
+            &TestAlphabet::SYMBOLS
+        }
+
+        #[inline]
+        fn size(&self) -> usize {
+            2
         }
     }
 
     impl Complement for TestAlphabet {
+        #[inline]
         fn complement_mapping(&self) -> &[&str] {
-            &self.complement
+            &TestAlphabet::COMPLEMENT
         }
-    }
-
-    /// A collection of each type of alphabet that is more convenient to use
-    struct TestAlphabetCollection(TestAlphabet, TestAlphabet, TestAlphabet, TestAlphabet);
-
-    impl TestAlphabetCollection {
-        fn new() -> TestAlphabetCollection {
-            TestAlphabetCollection (
-                TestAlphabet::new(TestSize::Zero),
-                TestAlphabet::new(TestSize::One),
-                TestAlphabet::new(TestSize::Two),
-                TestAlphabet::new(TestSize::None),
-            )
-        }
-
-        /// Runs a function on each TestAlphabet in order to check for panics
-        fn test_all<F: Fn(&TestAlphabet)>(&self, f: F) {
-            f(&self.0);
-            f(&self.1);
-            f(&self.2);
-            f(&self.3);
-        }
-    }
-
-    /// Test that ensures the default implementation of [Alphabet::size()] works as intended
-    #[test]
-    fn correct_size() {
-        let alphabets = TestAlphabetCollection::new();
-
-        // Goes through each TestAlphabet and checks that the size function returns expected value
-        alphabets.test_all(|a| assert_eq!(a.size(), a.size.value()));
     }
 
     /// Test that ensures [Alphabet::contains()] returns true when it should
     #[test]
     fn contains_true() {
-        let none = TestAlphabet::new(TestSize::None);
+        let a = TestAlphabet;
 
-        assert!(none.contains("A"));
-        assert!(none.contains("BB"));
-        assert!(none.contains("CC"));
+        assert!(a.contains("AA"));
+        assert!(a.contains("BB"));
+        assert!(a.contains("CC"));
     }
 
     /// Test that ensures [Alphabet::contains()] returns false when it should
     #[test]
     fn contains_false() {
-        let none = TestAlphabet::new(TestSize::None);
+        let a = TestAlphabet;
 
-        assert!(!none.contains("B"));
-        assert!(!none.contains("D"));
+        assert!(!a.contains("B"));
+        assert!(!a.contains("D"));
     }
 
     /// Tests that the complement method works as expected when the invariant is met
     #[test]
     fn complement_valid() {
-        let a1 = TestAlphabet::new(TestSize::One);
-        let a2 = TestAlphabet::new(TestSize::None);
+        let a = TestAlphabet;
 
-        let seq1 = ["A", "B", "C", "C", "A", "B", "B"];
-        let seq1_comp = ["C", "A", "B", "B", "C", "A", "A"];
+        let seq      = ["AA", "BB", "CC", "CC", "BB", "AA", "AA"];
+        let seq_comp = ["CC", "AA", "BB", "BB", "AA", "CC", "CC"];
 
-        let seq2 = ["A", "BB", "CC", "CC", "BB", "A", "A"];
-        let seq2_comp = ["CC", "A", "BB", "BB", "A", "CC", "CC"];
-
-        assert_eq!(seq1_comp, a1.complement(&seq1).as_slice());
-        assert_eq!(seq2_comp, a2.complement(&seq2).as_slice());
+        assert_eq!(seq_comp, a.complement(&seq).as_slice());
     }
 }
