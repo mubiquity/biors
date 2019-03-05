@@ -12,6 +12,12 @@ pub mod dna;
 
 /// The alphabet trait is implemented for any type that can be used to construct a sequence
 pub trait Alphabet {
+    /// The symbol encoding type is used to encode the symbol strings into a more efficient format.
+    /// An encoding of u8 allows 256 unique symbols to be used.
+    /// If you require more symbols change this to be a larger unsigned integer type.
+    /// Note that a larger encoding will greatly increase Sequence size.
+    type SymbolEncoding = u8;
+
     /// Returns slice containing each valid symbol in the alphabet
     ///
     /// # Requires
