@@ -1,5 +1,6 @@
 /target
 **/*.rs.bks
+Cargo.lock
 
 .idea
 *.iml
@@ -11,4 +12,3 @@ deps/
 exampleProject
 testData
 .DS_Store
-
