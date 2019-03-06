@@ -3,6 +3,10 @@
 pub use super::{Alphabet, Complement};
 use std::fmt;
 
+//================================================================================
+// Unambiguous DNA Alphabet
+//================================================================================
+
 /// An alphabet that contains the symbols ACTG
 /// # Symbol Meaning
 /// <table>
@@ -58,6 +62,10 @@ impl fmt::Display for UnambiguousDnaAlphabet {
         write!(f, "Unambiguous DNA Alphabet containing symbols: {:?}", self.symbols())
     }
 }
+
+//================================================================================
+// Ambiguous DNA Alphabet
+//================================================================================
 
 /// An alphabet that contains the symbols AGCTYRWSKMDVHBN
 /// # Symbol Meaning
@@ -173,7 +181,11 @@ impl fmt::Display for AmbiguousDnaAlphabet {
     }
 }
 
-// TODO: Some tests could be made automatic/macroised for all Alphabet implementers
+//================================================================================
+// Tests
+//================================================================================
+
+// TODO: Some tests could be made automatic/macro-ised for all Alphabet implementers
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -223,7 +235,7 @@ mod tests {
     fn unambiguous_complement() {
         let a = UnambiguousDnaAlphabet;
 
-        let seq = ["A", "C", "T", "G", "G", "C", "A", "T"];
+        let seq  = ["A", "C", "T", "G", "G", "C", "A", "T"];
         let comp = ["T", "G", "A", "C", "C", "G", "T", "A"];
 
         assert_eq!(comp, a.complement(&seq).as_slice());
@@ -234,7 +246,7 @@ mod tests {
     fn ambiguous_complement() {
         let a = AmbiguousDnaAlphabet;
 
-        let seq = ["Y", "H", "K", "R", "T", "V", "B", "A", "D", "G", "W", "N", "S", "M", "C"];
+        let seq  = ["Y", "H", "K", "R", "T", "V", "B", "A", "D", "G", "W", "N", "S", "M", "C"];
         let comp = ["R", "D", "M", "Y", "A", "B", "V", "T", "H", "C", "W", "N", "S", "K", "G"];
 
         assert_eq!(comp, a.complement(&seq).as_slice());
