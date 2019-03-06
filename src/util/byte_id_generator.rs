@@ -2,7 +2,31 @@
 
 use num_traits::cast::ToPrimitive;
 use std::iter::{Iterator, IntoIterator};
-use std::mem;
+
+/// Get the byte encoded id from some index into the encoding.
+/// This returns and Err when the idx is larger than can possibly be encoded in "byte_count".
+pub fn get_id(idx: u64, byte_count: u32) -> Result<Vec<u8>, &'static str> {
+    if idx > (u64::pow(2, byte_count*8) - 1)  as u64 {
+        Err("Tried to get a byte id larger than allowed bytes would allow")
+    } else {
+        // Convert the idx to a byte array and then convert the required number of bytes to vec
+        let bytes = idx.to_be_bytes();
+        Ok((&bytes[(8-byte_count as usize)..8]).to_vec())
+    }
+}
+
+/// Gets the byte encoded id from some index into the encoding.
+/// This does not check that the index passed in is valid.
+///
+/// # Safety
+/// Technically this shouldn't cause any kind of safety issues but it does mean
+/// that the result will be incorrect.
+#[inline]
+pub unsafe fn get_id_unchecked(idx: u64, byte_count: u32) -> Vec<u8> {
+    // Convert the idx to a byte array and then convert the required number of bytes to vec
+    let bytes: [u8; 8] = idx.to_be_bytes();
+    (&bytes[(8-byte_count as usize)..8]).to_vec()
+}
 
 /// Generates the byte ids from a given index and can be built to use a specified number of bytes
 /// or to only generate up to a maximum index.
@@ -20,7 +44,7 @@ pub struct ByteIdGenerator {
     /// The maximum index that will be required
     max: u64,
     /// The number of bytes used for the encoding
-    num_bytes: usize,
+    num_bytes: u32,
 }
 
 impl ByteIdGenerator {
@@ -30,7 +54,7 @@ impl ByteIdGenerator {
         // This was the only formula I could think of that didn't have rounding issues
         // problem being it won't work when max_idx is u64::MAX because of overflow.
         let num_bytes = if max_idx != std::u64::MAX {
-            (f64::log2((max_idx + 1) as f64).ceil() / 8.0).ceil() as usize
+            (f64::log2((max_idx + 1) as f64).ceil() / 8.0).ceil() as u32
         } else {
             8
         };
@@ -46,7 +70,7 @@ impl ByteIdGenerator {
     pub fn from_byte_count(num_bytes: u32) -> ByteIdGenerator {
         ByteIdGenerator {
             max: u64::pow(2, num_bytes*8) - 1,
-            num_bytes: num_bytes as usize
+            num_bytes
         }
     }
 
@@ -58,30 +82,31 @@ impl ByteIdGenerator {
 
     /// Get the number of bytes this generator will encode with
     #[inline]
-    pub fn num_bytes(&self) -> usize {
+    pub fn num_bytes(&self) -> u32 {
         self.num_bytes
     }
 
+    /// Similar to a stateful call of the [get_id()] function (uses local max bound instead).
     /// Get the byte encoded id from some index into the encoding.
     /// This returns and Err when the idx is larger than the max of the generator.
     pub fn get_id(&self, idx: u64) -> Result<Vec<u8>, &'static str> {
-        if idx > self.max as u64 {
-            Err("Tried to get a byte id larger than allowed max.")
+        if idx > self.max {
+            Err("Tried to get a byte id larger than max generator size")
         } else {
-            // Convert the idx to a byte array and then convert the required number of bytes to vec
-            let bytes: [u8; 8] = unsafe { mem::transmute(idx.to_be()) };
-            Ok((&bytes[8-self.num_bytes..8]).to_vec())
+            unsafe { Ok(get_id_unchecked(idx, self.num_bytes)) }
         }
-
     }
 
+    /// Stateful call of the [get_id_unchecked()] function.
     /// Get the byte encoded id from some index into the encoding.
     /// This does not check that the idx passed in is valid.
+    ///
+    /// # Safety
+    /// Technically this shouldn't cause any kind of safety issues but it does mean
+    /// that the result will be incorrect.
     #[inline]
-    pub fn get_id_unchecked(&self, idx: u64) -> Vec<u8> {
-        // Convert the idx to a byte array and then convert the required number of bytes to vec
-        let bytes: [u8; 8] = unsafe { mem::transmute(idx.to_be()) };
-        (&bytes[8-self.num_bytes..8]).to_vec()
+    pub unsafe fn get_id_unchecked(&self, idx: u64) -> Vec<u8> {
+        get_id_unchecked(idx, self.num_bytes)
     }
 }
 
@@ -101,10 +126,12 @@ impl<'a> Iterator for ByteIdIter<'a> {
             return None;
         }
 
-        let res = Some(self.generator.get_id_unchecked(self.index));
+        let res = unsafe {
+            Some(self.generator.get_id_unchecked(self.index))
+        };
         self.index += 1;
-
         res
+
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
