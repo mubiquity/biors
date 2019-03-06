@@ -1,4 +1,4 @@
-//! This is a small set of utility features that can be used to map a number to a slice of bytes
+//! Used to map a number to its constituent bytes
 
 use num_traits::cast::ToPrimitive;
 use std::iter::{Iterator, IntoIterator};

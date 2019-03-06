@@ -5,6 +5,7 @@
 
 use std::collections::HashMap;
 
+pub mod encoding;
 pub mod dna;
 
 // TODO: Need to decide how I want to handle case sensitivity for now everything is case sensitive
@@ -12,15 +13,6 @@ pub mod dna;
 
 /// The alphabet trait is implemented for any type that can be used to construct a sequence
 pub trait Alphabet {
-    /// Symbols are mapped using a binary encoding. This constant determines how many bytes the
-    /// alphabet will need to encode all of its symbols across its entire lifetime.
-    /// For example if the Alphabet will always contain less than 256 symbols then 1 byte is enough.
-    ///
-    /// # Default
-    /// Default number of encoding bytes is 1. This should be enough for the vast majority of
-    /// Alphabets.
-    const ENCODING_BYTES: u32 = 1;
-
     /// Returns slice containing each valid symbol in the alphabet
     ///
     /// # Requires
@@ -36,11 +28,20 @@ pub trait Alphabet {
     /// The size must be greater than 0
     ///
     /// # Default
-    /// The default size of an alphabet is 1
+    /// The default symbol size is 1
     #[inline]
-    fn size(&self) -> usize {
+    fn symbol_size(&self) -> usize {
         1
     }
+
+    /// Returns the maximum number of symbols that the Alphabet will ever contain over its entire
+    /// lifetime.
+    ///
+    /// # Default
+    /// The default max alphabet size is 255. This allows the assumption that all symbols in the
+    /// alphabet can be encoded using a single byte.
+    #[inline]
+    fn max_alphabet_size(&self) -> usize { 255 }
 
     /// Returns true if the alphabet contains the symbol "s" else false
     fn contains<T: AsRef<str>>(&self, s: T) -> bool {
@@ -104,7 +105,7 @@ mod tests {
         }
 
         #[inline]
-        fn size(&self) -> usize {
+        fn symbol_size(&self) -> usize {
             2
         }
     }
