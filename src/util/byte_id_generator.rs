@@ -3,6 +3,10 @@
 use num_traits::cast::ToPrimitive;
 use std::iter::{Iterator, IntoIterator};
 
+//================================================================================
+// Stateless Functions
+//================================================================================
+
 /// Get the byte encoded id from some index into the encoding.
 /// This returns and Err when the idx is larger than can possibly be encoded in "byte_count".
 pub fn get_id(idx: u64, byte_count: u32) -> Result<Vec<u8>, &'static str> {
@@ -27,6 +31,10 @@ pub unsafe fn get_id_unchecked(idx: u64, byte_count: u32) -> Vec<u8> {
     let bytes: [u8; 8] = idx.to_be_bytes();
     (&bytes[(8-byte_count as usize)..8]).to_vec()
 }
+
+//================================================================================
+// Stateful Generator
+//================================================================================
 
 /// Generates the byte ids from a given index and can be built to use a specified number of bytes
 /// or to only generate up to a maximum index.
@@ -110,6 +118,10 @@ impl ByteIdGenerator {
     }
 }
 
+//================================================================================
+// Iteration
+//================================================================================
+
 /// An iterator over a ByteIdGenerator.
 /// Goes from 0 to the maximum value of the generator.
 pub struct ByteIdIter<'a> {
@@ -156,6 +168,10 @@ impl<'a> IntoIterator for &'a ByteIdGenerator {
         }
     }
 }
+
+//================================================================================
+// Tests
+//================================================================================
 
 #[cfg(test)]
 mod tests {

@@ -3,6 +3,10 @@
 pub use super::{Alphabet, Complement};
 use std::fmt;
 
+//================================================================================
+// Unambiguous DNA Alphabet
+//================================================================================
+
 /// An alphabet that contains the symbols ACTG
 /// # Symbol Meaning
 /// <table>
@@ -58,6 +62,10 @@ impl fmt::Display for UnambiguousDnaAlphabet {
         write!(f, "Unambiguous DNA Alphabet containing symbols: {:?}", self.symbols())
     }
 }
+
+//================================================================================
+// Ambiguous DNA Alphabet
+//================================================================================
 
 /// An alphabet that contains the symbols AGCTYRWSKMDVHBN
 /// # Symbol Meaning
@@ -173,7 +181,11 @@ impl fmt::Display for AmbiguousDnaAlphabet {
     }
 }
 
-// TODO: Some tests could be made automatic/macroised for all Alphabet implementers
+//================================================================================
+// Tests
+//================================================================================
+
+// TODO: Some tests could be made automatic/macro-ised for all Alphabet implementers
 #[cfg(test)]
 mod tests {
     use super::*;
