@@ -71,14 +71,14 @@ impl<'a, A: Alphabet + 'a> AlphabetEncoder<A> for IndexEncoder<'a, A> {
             // If the symbol is not in the alphabet:
             if !self.alphabet.contains(symbol) {
                 let extra = format!(
-                    "The input to encode() was a symbol which does not exist in the alphabet: {}",
+                    " The input to encode() was a symbol which does not exist in the alphabet: {}",
                     symbol
                 );
 
                 error_message.push_str(&extra);
             } else {
                 error_message.push_str(
-                    "Did you alter the alphabet and forget to call recalculate_mapping()?"
+                    " Did you alter the alphabet and forget to call recalculate_mapping()?"
                 )
             }
 
@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected="IndexEncoder failed to encode symbol.The input to encode() was a symbol which does not exist in the alphabet: A")]
+    #[should_panic(expected="IndexEncoder failed to encode symbol. The input to encode() was a symbol which does not exist in the alphabet: A")]
     fn unexpected_symbol() {
         let a = TestAlphabet;
         let encoder = IndexEncoder::new(&a);
