@@ -11,7 +11,7 @@ pub mod dna;
 // TODO: Need to decide how I want to handle case sensitivity for now everything is case sensitive
 // TODO: Need to get the documentation links to work
 
-/// The alphabet trait is implemented for any type that can be used to construct a sequence
+/// The alphabet trait is implemented for any type that can be used to construct a sequence.
 pub trait Alphabet {
     /// Returns slice containing each valid symbol in the alphabet
     ///
