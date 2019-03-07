@@ -36,6 +36,7 @@ use std::fmt;
 ///     <td>C</td>
 ///   </tr>
 /// </table>
+#[derive(Debug)]
 pub struct UnambiguousDnaAlphabet;
 
 impl UnambiguousDnaAlphabet {
@@ -151,6 +152,7 @@ impl fmt::Display for UnambiguousDnaAlphabet {
 ///     <td>N</td>
 ///   </tr>
 /// </table>
+#[derive(Debug)]
 pub struct AmbiguousDnaAlphabet;
 
 impl AmbiguousDnaAlphabet {

@@ -20,6 +20,7 @@ use bimap::{BiHashMap, Overwritten};
 ///
 /// If you expect the number of symbols in your [Alphabet](super::Alphabet) will not be static you
 /// should look at the [recalculate_mapping()](AsciiIndexEncoder::recalculate_mapping) method.
+#[derive(Debug)]
 pub struct AsciiIndexEncoder<'a, A: Alphabet> {
     alphabet: &'a A,
     mapping: BiHashMap<&'a str, u8>,
