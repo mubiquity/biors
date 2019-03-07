@@ -1,7 +1,6 @@
 //! An encoding takes the symbols of an alphabet and transforms them in some meaningful way
-//! in order to increase efficiency and memory usage.
-
-pub mod byte_id_generator;
+//! in order to increase efficiency and reduce memory usage.
+//!
 pub mod index_encoder;
 
 pub use super::Alphabet;

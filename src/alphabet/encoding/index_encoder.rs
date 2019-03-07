@@ -5,7 +5,6 @@ pub use super::AlphabetEncoder;
 
 use crate::alphabet::Alphabet;
 use bimap::{BiHashMap, Overwritten};
-use super::byte_id_generator::ByteIdGenerator;
 
 /// An index encoder takes each symbol of an alphabet and encodes it based on its index in the slice
 /// returned from the [Alphabet::symbols()](super::Alphabet::symbols) method.
