@@ -38,12 +38,13 @@ pub trait Alphabet {
     /// lifetime.
     ///
     /// # Default
-    /// The default max alphabet size is 255. This allows the assumption that all symbols in the
+    /// The default max alphabet size is 256. This allows the assumption that all symbols in the
     /// alphabet can be encoded using a single byte.
     #[inline]
-    fn max_alphabet_size(&self) -> usize { 255 }
+    fn max_alphabet_size(&self) -> usize { 256 }
 
     /// Returns true if the alphabet contains the symbol "s" else false
+    #[inline]
     fn contains<T: AsRef<str>>(&self, s: T) -> bool {
         self.symbols().contains(&s.as_ref())
     }
