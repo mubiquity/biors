@@ -7,14 +7,26 @@ pub use super::Alphabet;
 use std::error::Error;
 use std::fmt;
 
+/// The type of Results returned from methods that encode or decode an alphabets symbols.
 pub type EncodingResult<T> = Result<T, EncodingError>;
 
+/// Represents a type that can map the symbols in an alphabet to and from valid UTF-8 bytes.
 pub trait AlphabetEncoder<A: Alphabet> {
     /// Takes in a symbol from the [Alphabet](super::Alphabet) A and turns it into a vector of bytes
+    ///
+    /// # Requires
+    /// The output bytes MUST be valid UTF-8.
+    /// This restriction allows implementation of a variety of efficient string searching algorithms
+    /// in a manner that isn't encoder dependant.
     fn encode(&self, symbol: &str) -> EncodingResult<Vec<u8>>;
 
-    /// Reverses [encode()](AlphabetEncoder::encode())
-    fn decode(&self, symbol: &[u8]) -> EncodingResult<&str>;
+    /// The opposite of [encode_all()](AlphabetEncoder::encode_all). This takes in some bytes that
+    /// can be decoded into a collection of alphabet symbols.
+    ///
+    /// # Notes
+    /// Because there is no requirement that each symbol maps to the same number of bytes
+    /// it is not possible to create a default implemented decode_all method.
+    fn decode_all(&self, symbols: &[u8]) -> EncodingResult<Vec<&str>>;
 
     /// How many bytes you expect an encoded symbol to take on average.
     /// Does not have to be exact and is purely for extra efficiency in memory allocation.
@@ -26,10 +38,24 @@ pub trait AlphabetEncoder<A: Alphabet> {
         1
     }
 
+    /// Decodes a single symbol. Reverses [encode()](AlphabetEncoder::encode).
+    fn decode(&self, symbol: &[u8]) -> EncodingResult<&str> {
+        let decoded = self.decode_all(symbol)?;
+
+        if decoded.len() == 1 {
+            Ok(decoded[0])
+        } else {
+            let kind = ErrorKind::InvalidBytes(symbol.to_vec());
+            let description = "Call to decode tried to decode multiple symbols. \
+            Use decode_all() instead.";
+            Err(EncodingError::new(kind, description.to_owned()))
+        }
+    }
+
     /// Takes a slice of strings and encodes them all using [encode()](AlphabetEncoder::encode()).
     /// Returns a flattened vec of the encoded strings on success.
     fn encode_all(&self, symbols: &[&str]) -> EncodingResult<Vec<u8>> {
-        // We make the guess that each symbol will take one byte when encoded
+        // Use size_hint to estimate how much space will be needed to store the result
         let mut encoded = Vec::with_capacity(symbols.len() * self.size_hint());
 
         for symbol in symbols {
@@ -60,6 +86,8 @@ pub enum ErrorKind {
     Other
 }
 
+/// The type of error returned whenever something goes wrong while trying to encode or decode
+/// with an [AlphabetEncoder]
 #[derive(Debug, Clone)]
 pub struct EncodingError {
     kind: ErrorKind,
@@ -87,6 +115,6 @@ impl Error for EncodingError {}
 
 impl fmt::Display for EncodingError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Encoding error occurred with description:\n\t{}", self.description)
+        write!(f, "Encoding error: {:?}:\n\t{}", self.kind, self.description)
     }
 }
