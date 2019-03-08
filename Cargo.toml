@@ -7,3 +7,10 @@ edition = "2018"
 [dependencies]
 num-traits = "0.2"
 bimap = "0.2"
+
+[dev-dependencies]
+criterion = "0.2"
+
+[[bench]]
+name = "sequence"
+harness = false
