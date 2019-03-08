@@ -7,6 +7,8 @@ pub use super::Alphabet;
 use std::error::Error;
 use std::fmt;
 
+// TODO: Replace &str with AsRef<&str>
+
 /// The type of Results returned from methods that encode or decode an alphabets symbols.
 pub type EncodingResult<T> = Result<T, EncodingError>;
 

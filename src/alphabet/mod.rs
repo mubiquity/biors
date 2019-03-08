@@ -48,6 +48,12 @@ pub trait Alphabet {
     fn contains<T: AsRef<str>>(&self, s: T) -> bool {
         self.symbols().contains(&s.as_ref())
     }
+
+    /// Checks to see if the Alphabet can construct a sequence of symbols
+    #[inline]
+    fn is_word<T: AsRef<str>>(&self, word: &[T]) -> bool {
+        word.iter().all(|symbol| self.contains(symbol))
+    }
 }
 
 /// The complement trait is implemented for any [Alphabet](self::Alphabet) that has a mapping from
@@ -135,6 +141,15 @@ mod tests {
 
         assert!(!a.contains("B"));
         assert!(!a.contains("D"));
+    }
+
+    /// Tests that the is_word method is working as expected
+    #[test]
+    fn is_word() {
+        let a = TestAlphabet;
+
+        assert!( a.is_word(&["AA", "BB", "AA", "CC"]));
+        assert!(!a.is_word(&["AA", "BB", "AA","C"]))
     }
 
     /// Tests that the complement method works as expected when the invariant is met
