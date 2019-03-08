@@ -5,6 +5,8 @@
 
 use std::collections::HashMap;
 
+pub use self::dna::{UnambiguousDnaAlphabet, AmbiguousDnaAlphabet};
+
 pub mod encoding;
 pub mod dna;
 

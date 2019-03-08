@@ -97,9 +97,15 @@ impl<'a, A: Alphabet> AlphabetEncoder<A> for AsciiIndexEncoder<'a, A> {
     }
 
     fn decode_all(&self, symbols: &[u8]) -> Result<Vec<&str>> {
-        let mut decoded = Vec::with_capacity(symbols.len() / self.size_hint());
+        let iter = symbols.into_iter();
 
-        for byte in symbols {
+        // Use size_hint to estimate how much space will be needed to store the result
+        let mut decoded = match iter.size_hint() {
+            (_, Some(amt)) => Vec::with_capacity(amt / self.size_hint()),
+            _ => Vec::with_capacity(self.size_hint()) // Probably room for 1 symbol at least
+        };
+
+        for byte in iter {
             let next_symbol = self.mapping.get_by_right(byte);
 
             match next_symbol {
@@ -177,7 +183,7 @@ mod tests {
         let seq   = vec!["AA", "BB", "CC", "AA", "BB"];
         let encoded= vec![0, 1, 2, 0, 1];
 
-        assert_eq!(encoder.encode_all(&seq).unwrap(), encoded);
+        assert_eq!(encoder.encode_all(seq).unwrap(), encoded);
     }
 
     /// Tests that the AsciiIndexEncoder can correctly decode a sequence
@@ -201,7 +207,7 @@ mod tests {
         let encoder = AsciiIndexEncoder::new(&a);
 
         let seq = vec!["AA", "BB", "A"];
-        let res = encoder.encode_all(&seq);
+        let res = encoder.encode_all(seq);
 
         match res {
             Ok(_) => panic!("Encoding worked when there was an invalid symbol"),
@@ -234,6 +240,6 @@ mod tests {
         let seq    = vec!["EE", "CC", "BB", "DD"];
         let encoded = vec![0, 2, 1, 3];
 
-        assert_eq!(encoder.encode_all(&seq).unwrap(), encoded);
+        assert_eq!(encoder.encode_all(seq).unwrap(), encoded);
     }
 }
