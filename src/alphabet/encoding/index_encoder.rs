@@ -5,7 +5,7 @@ pub use super::AlphabetEncoder;
 
 use crate::alphabet::Alphabet;
 use crate::alphabet::encoding::{EncodingError, ErrorKind};
-use super::EncodingResult;
+use super::Result;
 use bimap::{BiHashMap, Overwritten};
 
 /// An index encoder takes each symbol of an alphabet and encodes it based on its index in the slice
@@ -64,7 +64,7 @@ impl<'a, A: Alphabet> AsciiIndexEncoder<'a, A> {
 }
 
 impl<'a, A: Alphabet> AlphabetEncoder<A> for AsciiIndexEncoder<'a, A> {
-    fn encode(&self, symbol: &str) -> EncodingResult<Vec<u8>> {
+    fn encode(&self, symbol: &str) -> Result<Vec<u8>> {
         let res = self.mapping.get_by_left(&symbol);
 
         // Check if a mapping was found if not determine the error and panic! with useful message
@@ -96,7 +96,7 @@ impl<'a, A: Alphabet> AlphabetEncoder<A> for AsciiIndexEncoder<'a, A> {
         }
     }
 
-    fn decode_all(&self, symbols: &[u8]) -> EncodingResult<Vec<&str>> {
+    fn decode_all(&self, symbols: &[u8]) -> Result<Vec<&str>> {
         let mut decoded = Vec::with_capacity(symbols.len() / self.size_hint());
 
         for byte in symbols {
@@ -115,6 +115,10 @@ impl<'a, A: Alphabet> AlphabetEncoder<A> for AsciiIndexEncoder<'a, A> {
         }
 
         Ok(decoded)
+    }
+
+    fn alphabet(&self) -> &A {
+        self.alphabet
     }
 }
 
