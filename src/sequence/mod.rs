@@ -32,6 +32,8 @@ where
     E: AlphabetEncoder<A>
 {
     encoder: E,
+    /// Determines whether the sequence is circular or not
+    pub circular: bool,
     string: Vec<u8>,
     phantom: PhantomData<&'a A>
 }
@@ -47,8 +49,14 @@ where
         Sequence {
             encoder,
             string: vec![],
+            circular: false,
             phantom: PhantomData
         }
+    }
+
+    pub fn circular(mut self, circ: bool) -> Self {
+        self.circular = circ;
+        self
     }
 
     /// Get a reference to the alphabet that the encoder associated with this Sequence uses.
@@ -119,6 +127,7 @@ impl<'a, A: Alphabet> Sequence<'a, A, AsciiIndexEncoder<'a, A>> {
         Sequence {
             encoder: AsciiIndexEncoder::new(alphabet),
             string: vec![],
+            circular: false,
             phantom: PhantomData
         }
     }
@@ -207,7 +216,6 @@ fn string_chunks(src: &str, chunk_size: usize) -> impl Iterator<Item=&str> {
 mod tests {
     use super::*;
     use crate::alphabet::encoding;
-    use crate::alphabet::UnambiguousDnaAlphabet;
 
     struct TestAlphabet;
 
@@ -249,13 +257,13 @@ mod tests {
         }
     }
 
-    /// Test that the from_encoder method works
+    /// Test that the from_encoder method works throw in a sneaky circular to test as well
     #[test]
     fn from_encoder() {
         let a = TestAlphabet;
         let e = TestEncoder::new(&a);
 
-        let s = Sequence::from_encoder(e);
+        let s = Sequence::from_encoder(e).circular(true);
         let _a2 = s.alphabet();
     }
 
