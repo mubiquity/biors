@@ -54,6 +54,16 @@ where
         }
     }
 
+    /// Convenience function to set the sequence to be circular during creation.
+    /// # Example
+    /// ```
+    /// use biors::alphabet::UnambiguousDnaAlphabet;
+    /// use biors::sequence::Sequence;
+    ///
+    /// let alphabet = UnambiguousDnaAlphabet;
+    /// let seq = Sequence::new(&alphabet).circular(true);
+    /// assert!(seq.circular)
+    /// ```
     pub fn circular(mut self, circ: bool) -> Self {
         self.circular = circ;
         self
@@ -94,12 +104,14 @@ where
     /// assumed to begin with the first character of the input.
     ///
     /// # Notes
-    /// This does the same thing as [push()] except it doesn't check that the sequence length is a
-    /// multiple of the alphabets symbol_size. It is still perfectly safe to use and this just means
-    /// that any extra characters on the end will be ignored.
+    /// This does the same thing as [push()](Sequence::push) except it doesn't check that the sequence
+    /// length is a multiple of the alphabets symbol_size.
+    /// It is still perfectly safe to use and this just means that any extra characters on the
+    /// end will be ignored.
     ///
     /// Benchmarks seem to imply that there is little difference between the two methods but it may
-    /// be worth a shot if push is really slow for you for some reason.
+    /// be worth a shot if push is really slow for you for some reason or you simply don't care
+    /// about/want the assurance of push.
     pub fn push_unchecked<S: AsRef<str>>(&mut self, seq: S) -> encoding::Result<()> {
         let seq = seq.as_ref();
         let symbol_size = self.alphabet().symbol_size();
