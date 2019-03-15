@@ -5,13 +5,15 @@
 
 use std::collections::HashMap;
 
+pub use self::dna::{UnambiguousDnaAlphabet, AmbiguousDnaAlphabet};
+
 pub mod encoding;
 pub mod dna;
 
 // TODO: Need to decide how I want to handle case sensitivity for now everything is case sensitive
 // TODO: Need to get the documentation links to work
 
-/// The alphabet trait is implemented for any type that can be used to construct a sequence
+/// The alphabet trait is implemented for any type that can be used to construct a sequence.
 pub trait Alphabet {
     /// Returns slice containing each valid symbol in the alphabet
     ///
@@ -47,6 +49,12 @@ pub trait Alphabet {
     #[inline]
     fn contains<T: AsRef<str>>(&self, s: T) -> bool {
         self.symbols().contains(&s.as_ref())
+    }
+
+    /// Checks to see if the Alphabet can construct a sequence of symbols
+    #[inline]
+    fn is_word<T: AsRef<str>>(&self, word: &[T]) -> bool {
+        word.iter().all(|symbol| self.contains(symbol))
     }
 }
 
@@ -135,6 +143,15 @@ mod tests {
 
         assert!(!a.contains("B"));
         assert!(!a.contains("D"));
+    }
+
+    /// Tests that the is_word method is working as expected
+    #[test]
+    fn is_word() {
+        let a = TestAlphabet;
+
+        assert!( a.is_word(&["AA", "BB", "AA", "CC"]));
+        assert!(!a.is_word(&["AA", "BB", "AA","C"]))
     }
 
     /// Tests that the complement method works as expected when the invariant is met

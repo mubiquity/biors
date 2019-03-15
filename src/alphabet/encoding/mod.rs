@@ -7,8 +7,8 @@ pub use super::Alphabet;
 use std::error::Error;
 use std::fmt;
 
-/// The type of Results returned from methods that encode or decode an alphabets symbols.
-pub type EncodingResult<T> = Result<T, EncodingError>;
+/// The type of Results returned from methods that encode or decode an alphabet's symbols.
+pub type Result<T> = std::result::Result<T, EncodingError>;
 
 /// Represents a type that can map the symbols in an alphabet to and from valid UTF-8 bytes.
 pub trait AlphabetEncoder<A: Alphabet> {
@@ -18,7 +18,7 @@ pub trait AlphabetEncoder<A: Alphabet> {
     /// The output bytes MUST be valid UTF-8.
     /// This restriction allows implementation of a variety of efficient string searching algorithms
     /// in a manner that isn't encoder dependant.
-    fn encode(&self, symbol: &str) -> EncodingResult<Vec<u8>>;
+    fn encode(&self, symbol: &str) -> Result<Vec<u8>>;
 
     /// The opposite of [encode_all()](AlphabetEncoder::encode_all). This takes in some bytes that
     /// can be decoded into a collection of alphabet symbols.
@@ -26,7 +26,10 @@ pub trait AlphabetEncoder<A: Alphabet> {
     /// # Notes
     /// Because there is no requirement that each symbol maps to the same number of bytes
     /// it is not possible to create a default implemented decode_all method.
-    fn decode_all(&self, symbols: &[u8]) -> EncodingResult<Vec<&str>>;
+    fn decode_all(&self, symbols: &[u8]) -> Result<Vec<&str>>;
+
+    /// Return a reference to the underlying [Alphabet](super::Alphabet)
+    fn alphabet(&self) -> &A;
 
     /// How many bytes you expect an encoded symbol to take on average.
     /// Does not have to be exact and is purely for extra efficiency in memory allocation.
@@ -39,7 +42,7 @@ pub trait AlphabetEncoder<A: Alphabet> {
     }
 
     /// Decodes a single symbol. Reverses [encode()](AlphabetEncoder::encode).
-    fn decode(&self, symbol: &[u8]) -> EncodingResult<&str> {
+    fn decode(&self, symbol: &[u8]) -> Result<&str> {
         let decoded = self.decode_all(symbol)?;
 
         if decoded.len() == 1 {
@@ -52,14 +55,22 @@ pub trait AlphabetEncoder<A: Alphabet> {
         }
     }
 
-    /// Takes a slice of strings and encodes them all using [encode()](AlphabetEncoder::encode()).
+    /// Takes am iterator of strings and encodes them all using
+    /// [encode()](AlphabetEncoder::encode).
     /// Returns a flattened vec of the encoded strings on success.
-    fn encode_all(&self, symbols: &[&str]) -> EncodingResult<Vec<u8>> {
-        // Use size_hint to estimate how much space will be needed to store the result
-        let mut encoded = Vec::with_capacity(symbols.len() * self.size_hint());
+    fn encode_all<'a, I>(&self, symbols: I) -> Result<Vec<u8>>
+    where I: IntoIterator<Item = &'a str>
+    {
+        let iter = symbols.into_iter();
 
-        for symbol in symbols {
-            let encode = self.encode(*symbol)?;
+        // Use size_hint to estimate how much space will be needed to store the result
+        let mut encoded = match iter.size_hint() {
+            (_, Some(amt)) => Vec::with_capacity(amt * self.size_hint()),
+            _ => Vec::with_capacity(self.size_hint()) // Probably room for 1 symbol at least
+        };
+
+        for symbol in iter {
+            let encode = self.encode(symbol)?;
             encoded.extend_from_slice(encode.as_slice());
         }
 
@@ -77,10 +88,15 @@ pub enum ErrorKind {
     /// The bytes passed to [decode()](AlphabetEncoder::decode) were invalid.
     InvalidBytes(Vec<u8>),
 
+    /// The symbols could not be split because the number of characters was not a multiple of the
+    /// [Alphabet::symbol_size()](super::Alphabet::symbol_size).
+    InvalidLength,
+
     /// The encoder has no way to map your symbol/bytes. Potentially because the alphabet has
     /// changed. Each encoder will have different ways of handling this and different reasons as to
     /// why it might occur.
     NoMapping,
+
 
     /// Some other error occurred (check description/display)
     Other
